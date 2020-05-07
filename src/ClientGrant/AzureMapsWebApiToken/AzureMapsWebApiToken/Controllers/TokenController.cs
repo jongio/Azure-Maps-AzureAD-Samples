@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Azure.Core;
+using Azure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +29,7 @@ namespace AzureMapsWebApiToken.Controllers
         /// For the Web SDK to authorize correctly, you still must assign Azure role based access control for the managed identity
         /// as explained in the readme.md. There is significant benefit which is outlined in the the readme.
         /// </remarks>
-        private static readonly AzureServiceTokenProvider tokenProvider = new AzureServiceTokenProvider();
+        private static readonly DefaultAzureCredential tokenProvider = new DefaultAzureCredential();
 
         [HttpGet]
         [Route("")]
@@ -35,9 +37,9 @@ namespace AzureMapsWebApiToken.Controllers
         {
             // tokenProvider will cache the token in memory, if you would like to reduce the dependency on Azure AD we recommend
             // implementing a distributed cache combined with using the other methods available on tokenProvider.
-            string accessToken = await tokenProvider.GetAccessTokenAsync("https://atlas.microsoft.com/", cancellationToken: HttpContext.RequestAborted);
+            var accessToken = await tokenProvider.GetTokenAsync(new TokenRequestContext(new string[] { "https://atlas.microsoft.com/.default" }), HttpContext.RequestAborted);
             
-            return Ok(accessToken);
+            return Ok(accessToken.Token);
         }
     }
 }
